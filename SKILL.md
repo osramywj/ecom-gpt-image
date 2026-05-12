@@ -71,6 +71,7 @@ IMG_OUTPUT_DIR=/Users/you/Downloads
 | `IMG_OUTPUT_DIR` | 图片保存目录 | — |
 
 `IMG_OUTPUT_DIR` 未设置时，默认保存到当前工作目录下的 `generated-images/`。
+一旦设置了 `IMG_OUTPUT_DIR`，脚本默认始终优先使用它；只有在用户明确要求覆盖时，才允许额外传入 `--force-output-dir --output-dir ...`。
 
 ### 生图命令
 
@@ -92,8 +93,11 @@ python3 scripts/generate_image.py --prompt "..." --image photo1.jpg,photo2.jpg
 # 指定尺寸和分辨率
 python3 scripts/generate_image.py --prompt "..." --size 1:1 --resolution 2k
 
-# 指定输出目录（覆盖 IMG_OUTPUT_DIR）
+# 指定输出目录（仅在未设置 IMG_OUTPUT_DIR 时生效）
 python3 scripts/generate_image.py --prompt "..." --output-dir ./my-outputs
+
+# 明确覆盖 IMG_OUTPUT_DIR
+python3 scripts/generate_image.py --prompt "..." --force-output-dir --output-dir ./my-outputs
 
 # 指定 .env 文件
 python3 scripts/generate_image.py --env-file ~/.config/ecom-gpt-image/.env --prompt "..."
@@ -119,6 +123,7 @@ python3 scripts/generate_image.py --env-file ~/.config/ecom-gpt-image/.env --pro
 - **不要忽略参考图**：参考图比文字描述更能保证产品一致性。
 - **不要过度询问**：如果用户已表达明确意图，直接构建 Prompt 并生图。
 - **不要重复描述已有视觉**：参考图本身已包含产品外观信息，Prompt 聚焦场景和风格。
+- **不要默认传 `--output-dir`**：若已配置 `IMG_OUTPUT_DIR`，让脚本按环境变量自动落盘；只有用户明确要求改目录时，才使用 `--force-output-dir --output-dir ...`。
 
 ---
 
@@ -132,7 +137,7 @@ python3 scripts/generate_image.py --env-file ~/.config/ecom-gpt-image/.env --pro
 6. 写出可执行图片 Prompt（**保持简洁**，见下方 Prompt 精简原则）；多图任务必须把同一段 Campaign Style Lock 原样放进每张 Prompt。
 7. 如果任务是商品图、详情页图或营销图，先做转化驱动力诊断。
 8. 如果用户要求电商详情页、PDP、主图堆栈或整套商品图，默认输出 **5 张主图 + 7-9 张详情页图片** 的图片包。
-9. 如果用户要求直接出图，调用 `scripts/generate_image.py`；如果用户提供了参考产品图，传入 `--image`。
+9. 如果用户要求直接出图，调用 `scripts/generate_image.py`；如果用户提供了参考产品图，传入 `--image`；默认不要传 `--output-dir`，除非用户明确要求覆盖输出目录。
 10. 返回 Prompt、生成文件路径和关键假设。
 
 ---

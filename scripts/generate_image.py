@@ -152,11 +152,13 @@ def require_config(name: str) -> str:
     )
 
 
-def get_output_dir(args_output_dir: str | None) -> Path:
-    """按优先级确定输出目录：命令行参数 > IMG_OUTPUT_DIR > generated-images/"""
+def get_output_dir(args_output_dir: str | None, force_output_dir: bool) -> Path:
+    """按优先级确定输出目录：IMG_OUTPUT_DIR > --output-dir > generated-images/。"""
+    env_dir = os.environ.get(ENV_OUTPUT_DIR, "").strip()
+    if env_dir and not force_output_dir:
+        return Path(env_dir)
     if args_output_dir:
         return Path(args_output_dir)
-    env_dir = os.environ.get(ENV_OUTPUT_DIR, "").strip()
     if env_dir:
         return Path(env_dir)
     return Path("generated-images")
@@ -380,7 +382,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         default=None,
-        help="图片输出目录。默认使用 IMG_OUTPUT_DIR 环境变量，未设置则为 generated-images/。",
+        help="图片输出目录。默认仅在未设置 IMG_OUTPUT_DIR 时生效。",
+    )
+    parser.add_argument(
+        "--force-output-dir",
+        action="store_true",
+        help="即使已设置 IMG_OUTPUT_DIR，也强制使用 --output-dir。默认关闭。",
     )
     parser.add_argument(
         "--env-file",
@@ -449,7 +456,7 @@ def main() -> None:
     pixel_size = resolve_size(args.size, args.resolution)
 
     payload = build_payload(args, prompt, model, pixel_size)
-    output_dir = get_output_dir(args.output_dir)
+    output_dir = get_output_dir(args.output_dir, args.force_output_dir)
 
     print(f"正在生成图片... (尺寸: {pixel_size}, 输出: {output_dir})", file=sys.stderr)
     start = time.time()
